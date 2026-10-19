@@ -1,5 +1,7 @@
 # Pourquoi tu perds ? — version Dragon Ball
 
+**La vidéo finale : [`pourquoi-tu-perds.mp4`](pourquoi-tu-perds.mp4)** (63 s, 1080×1920, voix + bruitages + musique).
+
 Motion design vertical (9:16, 1080×1920) en 17 scènes, dans le style fan-art Dragon Ball, avec Goku et Vegeta qui se donnent la réplique.
 
 ## Lancer
@@ -14,5 +16,6 @@ Ouvrir `index.html` dans Chrome ou Edge, puis cliquer sur **LANCER**.
 
 Les bruitages (sirène, explosion de ki, level-up…) sont générés en Web Audio : aucun fichier à télécharger.
 
-## Exporter en vidéo
-Afficher la fenêtre en plein écran, en portrait, et l'enregistrer avec un enregistreur d'écran (OBS, Xbox Game Bar, QuickTime) en capturant le son du système.
+## Refaire la vidéo
+1. Voix : `tools/voices.sh fr-siwis-medium.onnx` (Piper, voix française locale ; Goku plus aigu, Vegeta plus grave).
+2. Vidéo : `npm i playwright && node tools/render.mjs` → rendu image par image + mixage audio (`tools/audio.py`, besoin de numpy et ffmpeg).

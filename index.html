@@ -142,106 +142,135 @@
 
 <script>
 /* =====================================================================
-   PERSONNAGES (SVG dessinés à la main, style chibi)
-   origine = centre de la tête, tête ~ rx 85 / ry 100
+   PERSONNAGES (SVG, style anime)
+   origine = centre de la tête ; le visage fait ~160 × 240
    ===================================================================== */
-const SKIN = '#f8c99c', SKIN_D = '#e2a674', HAIR = '#141414';
+const SKIN = '#ffd2a8', SKIN_D = '#e9a676', HAIR = '#16161c', HAIR_HI = '#3a3a4a';
+const GOLD = '#ffe14a', GOLD_D = '#f0a800';
+const OL = 'stroke="#111" stroke-width="6" stroke-linejoin="round"';
 
-function eyes(expr, who){
-  const brow = who === 'vegeta';
-  switch(expr){
-    case 'happy':  // ^^
-      return `<path d="M-52 0 Q-34 -22 -16 0 M16 0 Q34 -22 52 0" stroke="#111" stroke-width="9" fill="none" stroke-linecap="round"/>`;
-    case 'closed':
-      return `<path d="M-52 -2 Q-34 10 -16 -2 M16 -2 Q34 10 52 -2" stroke="#111" stroke-width="8" fill="none" stroke-linecap="round"/>`;
-    case 'angry': case 'furious': case 'smug':
-      return `
-        <path d="M-60 -38 L-12 -14 M60 -38 L12 -14" stroke="#111" stroke-width="${expr==='furious'?16:13}" stroke-linecap="round"/>
-        <path d="M-52 -10 L-16 2 L-22 14 L-50 8 Z M52 -10 L16 2 L22 14 L50 8 Z" fill="#fff" stroke="#111" stroke-width="4"/>
-        <circle cx="-30" cy="6" r="${expr==='furious'?3:5}" fill="#111"/><circle cx="30" cy="6" r="${expr==='furious'?3:5}" fill="#111"/>`;
-    default:   // normal (gros yeux brillants)
-      return `
-        ${brow?'':'<path d="M-56 -36 Q-34 -46 -14 -36 M14 -36 Q34 -46 56 -36" stroke="#111" stroke-width="7" fill="none" stroke-linecap="round"/>'}
-        <ellipse cx="-34" cy="-4" rx="15" ry="20" fill="#111"/><ellipse cx="34" cy="-4" rx="15" ry="20" fill="#111"/>
-        <circle cx="-29" cy="-11" r="6" fill="#fff"/><circle cx="39" cy="-11" r="6" fill="#fff"/>`;
+const HEAD = 'M-80 -30 C-82 34 -70 72 -40 100 L-12 124 Q0 130 12 124 L40 100 C70 72 82 34 80 -30 C78 -96 40 -118 0 -118 C-40 -118 -78 -96 -80 -30 Z';
+
+function eyePair(fn){ return fn(1) + fn(-1); }   // fn(side) dessine l'œil du côté droit (side=1) puis miroir
+function eyes(expr, who, ssj){
+  const iris = ssj ? '#2fb9b0' : '#111';
+  const angry = who==='vegeta' || expr==='angry' || expr==='furious' || expr==='smug' || expr==='serious';
+  if(expr==='happy')  return eyePair(s=>`<path d="M${s*16} 0 Q${s*38} -24 ${s*62} -2" stroke="#111" stroke-width="9" fill="none" stroke-linecap="round"/>`)
+                           + eyePair(s=>`<path d="M${s*14} -34 Q${s*40} -50 ${s*66} -38" stroke="#111" stroke-width="9" fill="none" stroke-linecap="round"/>`);
+  if(expr==='closed') return eyePair(s=>`<path d="M${s*16} -2 Q${s*38} 10 ${s*62} -2" stroke="#111" stroke-width="8" fill="none" stroke-linecap="round"/>`)
+                           + eyePair(s=>`<path d="M${s*14} -32 Q${s*40} -40 ${s*66} -30" stroke="#111" stroke-width="8" fill="none" stroke-linecap="round"/>`);
+  if(angry){
+    const k = expr==='furious' ? 1.25 : 1;
+    return eyePair(s=>`
+      <path d="M${s*12} -22 L${s*68} -44 L${s*70} -30 L${s*14} -10 Z" fill="#111"/>
+      <path d="M${s*16} -6 L${s*64} -22 Q${s*62} 2 ${s*44} 6 L${s*18} 4 Z" fill="#fff" ${OL}/>
+      <ellipse cx="${s*34}" cy="-6" rx="${7/k}" ry="${9/k}" fill="${iris}"/>
+      <path d="M${s*14} -8 L${s*66} -26" stroke="#111" stroke-width="7" stroke-linecap="round"/>`)
+      + (who==='vegeta' ? `<path d="M-14 -52 L0 -40 L14 -52 M-8 -64 L0 -56 L8 -64" stroke="#b97a52" stroke-width="4" fill="none" stroke-linecap="round"/>` : '');
   }
+  // normal : grands yeux de shōnen, sourcils épais
+  return eyePair(s=>`
+    <path d="M${s*14} -36 L${s*64} -42 L${s*66} -32 L${s*16} -26 Z" fill="#111"/>
+    <path d="M${s*16} -12 L${s*62} -18 Q${s*62} 8 ${s*42} 10 Q${s*22} 10 ${s*18} 2 Z" fill="#fff" ${OL}/>
+    <ellipse cx="${s*36}" cy="-3" rx="10" ry="13" fill="${iris}"/>
+    <circle cx="${s*39}" cy="-8" r="4" fill="#fff"/>
+    <path d="M${s*12} -12 L${s*66} -20" stroke="#111" stroke-width="7" stroke-linecap="round"/>`);
 }
 function mouth(expr){
   switch(expr){
-    case 'happy':   return `<path d="M-38 42 Q0 100 38 42 Z" fill="#7a1d1d" stroke="#111" stroke-width="6"/><path d="M-20 70 Q0 84 20 70" fill="#ff7a7a"/>`;
-    case 'angry':   return `<path d="M-26 58 Q0 44 26 58" stroke="#111" stroke-width="7" fill="none" stroke-linecap="round"/>`;
-    case 'furious': return `<rect x="-36" y="44" width="72" height="28" rx="8" fill="#fff" stroke="#111" stroke-width="6"/><path d="M-18 44v28M0 44v28M18 44v28" stroke="#111" stroke-width="3"/>`;
-    case 'smug':    return `<path d="M-24 56 Q10 62 30 44" stroke="#111" stroke-width="7" fill="none" stroke-linecap="round"/>`;
-    case 'closed':  return `<path d="M-22 52 Q0 66 22 52" stroke="#111" stroke-width="7" fill="none" stroke-linecap="round"/>`;
-    case 'flat':    return `<path d="M-18 56 H18" stroke="#111" stroke-width="7" stroke-linecap="round"/>`;
-    default:        return `<path d="M-26 48 Q0 72 26 48" stroke="#111" stroke-width="7" fill="none" stroke-linecap="round"/>`;
+    case 'happy':   return `<path d="M-34 56 Q0 108 34 56 Z" fill="#8e2323" ${OL}/><path d="M-18 84 Q0 96 18 84" fill="#ff8a8a"/>`;
+    case 'angry': case 'serious': return `<path d="M-22 72 Q0 62 22 72" stroke="#111" stroke-width="6" fill="none" stroke-linecap="round"/>`;
+    case 'furious': return `<path d="M-34 58 L34 58 L28 86 L-28 86 Z" fill="#fff" ${OL}/><path d="M-30 72 H30" stroke="#111" stroke-width="4"/>`;
+    case 'smug':    return `<path d="M-22 74 Q8 78 28 58" stroke="#111" stroke-width="6" fill="none" stroke-linecap="round"/>`;
+    case 'closed':  return `<path d="M-16 70 Q0 80 16 70" stroke="#111" stroke-width="6" fill="none" stroke-linecap="round"/>`;
+    default:        return `<path d="M-22 66 Q0 84 22 66" stroke="#111" stroke-width="6" fill="none" stroke-linecap="round"/>`;
   }
 }
-function face(expr, who){
+function face(expr, who, ssj){
   return `
-    <ellipse cx="-86" cy="10" rx="18" ry="26" fill="${SKIN}" stroke="#111" stroke-width="6"/>
-    <ellipse cx="86" cy="10" rx="18" ry="26" fill="${SKIN}" stroke="#111" stroke-width="6"/>
-    <ellipse cx="0" cy="0" rx="86" ry="100" fill="${SKIN}" stroke="#111" stroke-width="7"/>
-    <path d="M-4 22 L4 34" stroke="${SKIN_D}" stroke-width="6" stroke-linecap="round"/>
-    ${eyes(expr, who)}${mouth(expr)}`;
+    <rect x="-34" y="80" width="68" height="70" fill="${SKIN}" ${OL}/>
+    <path d="M-80 -6 q-30 -10 -24 24 q6 24 26 22 Z M80 -6 q30 -10 24 24 q-6 24 -26 22 Z" fill="${SKIN}" ${OL}/>
+    <path d="${HEAD}" fill="${SKIN}" ${OL}/>
+    <path d="M-40 100 L-12 124 Q0 130 12 124 L40 100 C20 112 -20 112 -40 100 Z" fill="${SKIN_D}" opacity=".5"/>
+    <path d="M4 22 L14 44 L2 46" stroke="#b97a52" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    ${eyes(expr, who, ssj)}${mouth(expr)}`;
 }
 
-const GOKU_HAIR = `<path d="M-92 -6 L-176 -40 L-108 -78 L-190 -150 L-92 -128 L-128 -232 L-40 -150 L0 -250 L40 -150 L128 -232 L92 -128 L190 -150 L108 -78 L176 -40 L92 -6 L84 -52 L56 -38 L46 -84 L16 -40 L-6 -96 L-30 -40 L-56 -82 L-70 -36 L-86 -50 Z" fill="${HAIR}" stroke="#111" stroke-width="6" stroke-linejoin="round"/>`;
-const VEG_HAIR  = `<path d="M-84 -20 L-104 -100 L-72 -96 L-96 -220 L-40 -160 L-30 -290 L0 -200 L30 -290 L40 -160 L96 -220 L72 -96 L104 -100 L84 -20 L60 -54 L30 -56 L0 -24 L-30 -56 L-60 -54 Z" fill="${HAIR}" stroke="#111" stroke-width="6" stroke-linejoin="round"/>`;
+/* Goku : grosses mèches qui partent dans tous les sens + 3 mèches sur le front */
+function gokuHair(ssj){
+  const f = ssj ? GOLD : HAIR, hi = ssj ? '#fff6a8' : HAIR_HI;
+  const d = ssj
+    ? 'M-84 -20 L-130 -90 L-80 -96 L-120 -220 L-50 -150 L-30 -300 L10 -170 L60 -290 L60 -150 L140 -230 L100 -100 L150 -80 L86 -20 L76 -70 L50 -50 L40 -96 L10 -46 L-14 -100 L-40 -40 L-50 -84 L-76 -50 Z'
+    : 'M-84 -16 L-176 -24 L-112 -70 L-206 -120 L-110 -124 L-172 -214 L-70 -164 L-64 -270 L-12 -172 L40 -276 L52 -168 L150 -232 L104 -132 L210 -128 L112 -76 L178 -22 L86 -24 L78 -64 L54 -48 L46 -100 L18 -46 L-4 -108 L-32 -36 L-48 -96 L-62 -40 L-74 -60 Z';
+  return `<path d="${d}" fill="${f}" ${OL}/>
+    <path d="M-40 -150 L-20 -110 M30 -160 L36 -120 M90 -150 L70 -110 M-110 -100 L-80 -84" stroke="${hi}" stroke-width="8" stroke-linecap="round" opacity=".8"/>`;
+}
+/* Vegeta : flamme verticale + golfe frontal en M très marqué */
+function vegHair(ssj){
+  const f = ssj ? GOLD : HAIR, hi = ssj ? '#fff6a8' : HAIR_HI;
+  return `<path d="M-82 -10 L-104 -104 L-86 -112 L-118 -214 L-64 -176 L-76 -296 L-24 -206 L0 -340 L24 -206 L76 -296 L64 -176 L118 -214 L86 -112 L104 -104 L82 -10 L74 -74 Q44 -84 22 -66 L0 -40 L-22 -66 Q-44 -84 -74 -74 Z" fill="${f}" ${OL}/>
+    <path d="M-40 -170 L-30 -120 M0 -250 L0 -150 M40 -170 L30 -120" stroke="${hi}" stroke-width="8" stroke-linecap="round" opacity=".8"/>`;
+}
 
 function gokuBody(pose){
-  const armL = pose==='laugh' ? '' : `<rect x="-168" y="110" width="52" height="190" rx="26" fill="${SKIN}" stroke="#111" stroke-width="6"/><rect x="-170" y="270" width="56" height="34" rx="10" fill="#1f4fbf" stroke="#111" stroke-width="5"/>`;
+  const arm = s => `<path d="M${s*128} 160 Q${s*176} 170 ${s*172} 250 L${s*164} 320 L${s*118} 320 L${s*116} 220 Z" fill="${SKIN}" ${OL}/>
+     <rect x="${s>0?112:-170}" y="296" width="58" height="40" rx="10" fill="#1f4fbf" ${OL}/>
+     <circle cx="${s*142}" cy="356" r="30" fill="${SKIN}" ${OL}/>`;
   return `
-    ${armL}
-    <rect x="116" y="110" width="52" height="190" rx="26" fill="${SKIN}" stroke="#111" stroke-width="6"/>
-    <rect x="114" y="270" width="56" height="34" rx="10" fill="#1f4fbf" stroke="#111" stroke-width="5"/>
-    <path d="M-120 96 Q0 78 120 96 L134 360 L-134 360 Z" fill="var(--orange)" stroke="#111" stroke-width="7" stroke-linejoin="round"/>
-    <path d="M-50 92 L0 182 L50 92 Z" fill="#1f4fbf" stroke="#111" stroke-width="6" stroke-linejoin="round"/>
-    <circle cx="70" cy="170" r="26" fill="#fff" stroke="#111" stroke-width="5"/><text x="70" y="182" font-family="Bangers" font-size="34" text-anchor="middle" fill="#111">悟</text>
-    <rect x="-138" y="330" width="276" height="40" rx="8" fill="#1f4fbf" stroke="#111" stroke-width="6"/>`;
+    ${pose==='laugh' ? '' : arm(-1)}${arm(1)}
+    <path d="M-150 160 Q-150 130 -110 126 L110 126 Q150 130 150 160 L130 400 L-130 400 Z" fill="#1f4fbf" ${OL}/>
+    <path d="M-150 160 Q-150 130 -110 126 L-34 126 L0 220 L34 126 L110 126 Q150 130 150 160 L128 400 L-128 400 Z" fill="var(--orange)" ${OL}/>
+    <path d="M-70 200 Q-40 240 -60 300 M70 200 Q40 240 60 300" stroke="#c76a0c" stroke-width="5" fill="none"/>
+    <circle cx="80" cy="210" r="28" fill="#fff" ${OL}/><text x="80" y="223" font-family="Bangers" font-size="34" text-anchor="middle" fill="#111">悟</text>
+    <rect x="-134" y="366" width="268" height="40" rx="8" fill="#1f4fbf" ${OL}/>
+    <path d="M-30 400 L-50 470 L-14 470 L0 404 Z" fill="#1f4fbf" ${OL}/>`;
 }
 function gokuLegs(){
   return `
-    <path d="M-120 368 L-20 368 L-30 560 L-112 560 Z M20 368 L120 368 L112 560 L30 560 Z" fill="var(--orange)" stroke="#111" stroke-width="7" stroke-linejoin="round"/>
-    <path d="M-120 550 L-24 550 L-20 620 L-140 620 Z M24 550 L120 550 L140 620 L20 620 Z" fill="#1f4fbf" stroke="#111" stroke-width="7" stroke-linejoin="round"/>`;
+    <path d="M-128 400 L-6 400 L-20 600 L-120 600 Z M6 400 L128 400 L120 600 L20 600 Z" fill="var(--orange)" ${OL}/>
+    <path d="M-124 590 L-16 590 L-10 660 L-150 660 Z M16 590 L124 590 L150 660 L10 660 Z" fill="#1f4fbf" ${OL}/>
+    <path d="M-124 610 L-18 610 M18 610 L124 610" stroke="#e8322b" stroke-width="10"/>`;
 }
 function vegBody(pose){
   const arms = pose==='cross'
-    ? `<rect x="-150" y="190" width="300" height="62" rx="31" fill="#2350b8" stroke="#111" stroke-width="6"/>
-       <ellipse cx="-118" cy="214" rx="40" ry="34" fill="#fff" stroke="#111" stroke-width="6"/>
-       <ellipse cx="118" cy="228" rx="40" ry="34" fill="#fff" stroke="#111" stroke-width="6"/>`
-    : `<rect x="-166" y="110" width="50" height="180" rx="25" fill="#2350b8" stroke="#111" stroke-width="6"/>
-       <rect x="116" y="110" width="50" height="180" rx="25" fill="#2350b8" stroke="#111" stroke-width="6"/>
-       <circle cx="-141" cy="294" r="32" fill="#fff" stroke="#111" stroke-width="6"/>
-       <circle cx="141" cy="294" r="32" fill="#fff" stroke="#111" stroke-width="6"/>`;
+    ? `<path d="M-160 236 Q0 210 160 236 L160 300 Q0 276 -160 300 Z" fill="#23409c" ${OL}/>
+       <ellipse cx="-126" cy="262" rx="44" ry="38" fill="#fff" ${OL}/>
+       <ellipse cx="126" cy="282" rx="44" ry="38" fill="#fff" ${OL}/>`
+    : [1,-1].map(s=>`<path d="M${s*126} 170 Q${s*176} 180 ${s*172} 260 L${s*166} 330 L${s*120} 330 L${s*118} 220 Z" fill="#23409c" ${OL}/>
+       <circle cx="${s*144}" cy="350" r="34" fill="#fff" ${OL}/>`).join('');
   return `
-    <path d="M-120 96 Q0 80 120 96 L130 370 L-130 370 Z" fill="#2350b8" stroke="#111" stroke-width="7" stroke-linejoin="round"/>
-    <path d="M-110 100 Q0 140 110 100 L118 300 Q0 330 -118 300 Z" fill="#fdfdfd" stroke="#111" stroke-width="7" stroke-linejoin="round"/>
-    <path d="M-150 96 Q-130 70 -96 88 L-104 132 Q-140 130 -150 96 Z M150 96 Q130 70 96 88 L104 132 Q140 130 150 96 Z" fill="var(--gold)" stroke="#111" stroke-width="6"/>
-    <rect x="-130" y="330" width="260" height="40" rx="8" fill="#fff" stroke="#111" stroke-width="6"/>
+    <path d="M-140 160 Q-140 130 -100 126 L100 126 Q140 130 140 160 L128 410 L-128 410 Z" fill="#23409c" ${OL}/>
+    <path d="M-118 150 Q0 120 118 150 L112 320 Q0 350 -112 320 Z" fill="#fbfbff" ${OL}/>
+    <path d="M-60 200 Q0 220 60 200 M-50 260 Q0 280 50 260" stroke="#cfd3e6" stroke-width="5" fill="none"/>
+    <path d="M-110 150 Q-180 120 -196 160 L-150 214 Q-130 180 -110 196 Z M110 150 Q180 120 196 160 L150 214 Q130 180 110 196 Z" fill="${GOLD}" ${OL}/>
+    <path d="M-176 150 L-150 200 M176 150 L150 200" stroke="${GOLD_D}" stroke-width="5"/>
+    <rect x="-128" y="366" width="256" height="40" rx="8" fill="#fbfbff" ${OL}/>
     ${arms}`;
 }
 
-function goku({x=540,y=800,s=1,expr='normal',pose='',legs=false,glasses=false,cls=''}={}){
-  const laughArm = pose==='laugh' ? `<path d="M-118 120 Q-210 40 -120 -40" stroke="#111" stroke-width="64" fill="none" stroke-linecap="round"/><path d="M-118 120 Q-210 40 -120 -40" stroke="${SKIN}" stroke-width="50" fill="none" stroke-linecap="round"/><circle cx="-112" cy="-48" r="36" fill="${SKIN}" stroke="#111" stroke-width="6"/>` : '';
-  const g = glasses ? `<g fill="none" stroke="#111" stroke-width="7"><circle cx="-34" cy="-4" r="30" fill="rgba(255,255,255,.25)"/><circle cx="34" cy="-4" r="30" fill="rgba(255,255,255,.25)"/><path d="M-4 -6 H4 M-64 -10 L-86 -18 M64 -10 L86 -18"/></g>` : '';
+function goku({x=540,y=800,s=1,expr='normal',pose='',legs=false,glasses=false,ssj=false,cls=''}={}){
+  const laughArm = pose==='laugh' ? `<path d="M-130 170 Q-230 60 -128 -40" stroke="#111" stroke-width="66" fill="none" stroke-linecap="round"/><path d="M-130 170 Q-230 60 -128 -40" stroke="${SKIN}" stroke-width="52" fill="none" stroke-linecap="round"/><rect x="-196" y="70" width="58" height="40" rx="10" fill="#1f4fbf" ${OL} transform="rotate(60 -167 90)"/>` : '';
+  const g = glasses ? `<g fill="none" stroke="#111" stroke-width="7"><circle cx="-38" cy="-4" r="32" fill="rgba(255,255,255,.25)"/><circle cx="38" cy="-4" r="32" fill="rgba(255,255,255,.25)"/><path d="M-6 -6 H6 M-70 -10 L-86 -14 M70 -10 L86 -14"/></g>` : '';
+  const aura = ssj ? `<g class="flicker"><ellipse cx="0" cy="160" rx="300" ry="520" fill="${GOLD}" opacity=".35"/></g>` : '';
   return `<g transform="translate(${x} ${y}) scale(${s})"><g class="${cls}">
-    ${legs?gokuLegs():''}${gokuBody(pose)}${laughArm}${face(expr,'goku')}${g}${GOKU_HAIR}
+    ${aura}${legs?gokuLegs():''}${gokuBody(pose)}${laughArm}${face(expr,'goku',ssj)}${g}${gokuHair(ssj)}
+    ${pose==='laugh' ? `<circle cx="-120" cy="-56" r="34" fill="${SKIN}" ${OL}/>` : ''}
   </g></g>`;
 }
-function vegeta({x=540,y=800,s=1,expr='angry',pose='',vein=false,cls=''}={}){
-  const v = vein ? `<path class="fb pop" d="M28 -70 l14 -14 m6 14 l14 -14 m-34 -6 l14 14 m6 -14 l14 14" stroke="var(--red)" stroke-width="9" stroke-linecap="round"/>` : '';
+function vegeta({x=540,y=800,s=1,expr='angry',pose='',vein=false,ssj=false,cls=''}={}){
+  const v = vein ? `<g transform="translate(50 -80)"><path class="fb pop" d="M-14 -14 Q0 -4 14 -14 M-14 14 Q0 4 14 14 M-14 -14 Q-4 0 -14 14 M14 -14 Q4 0 14 14" stroke="var(--red)" stroke-width="8" fill="none" stroke-linecap="round"/></g>` : '';
+  const aura = ssj ? `<g class="flicker"><ellipse cx="0" cy="160" rx="300" ry="540" fill="${GOLD}" opacity=".4"/></g>` : '';
   return `<g transform="translate(${x} ${y}) scale(${s})"><g class="${cls}">
-    ${vegBody(pose)}${face(expr,'vegeta')}${v}${VEG_HAIR}
+    ${aura}${vegBody(pose)}${face(expr,'vegeta',ssj)}${vegHair(ssj)}${v}
   </g></g>`;
 }
 function vegetaBack({x=540,y=800,s=1}={}){
   return `<g transform="translate(${x} ${y}) scale(${s})">
-    <path class="cape" d="M-140 100 L140 100 L210 560 Q0 600 -210 560 Z" fill="#2350b8" stroke="#111" stroke-width="7"/>
-    <path d="M-140 100 Q0 70 140 100 L130 140 L-130 140 Z" fill="#fff" stroke="#111" stroke-width="6"/>
-    <ellipse cx="0" cy="0" rx="86" ry="100" fill="${HAIR}" stroke="#111" stroke-width="6"/>
-    ${VEG_HAIR}
-    <path d="M-150 96 Q-130 70 -96 88 L-104 132 Q-140 130 -150 96 Z M150 96 Q130 70 96 88 L104 132 Q140 130 150 96 Z" fill="var(--gold)" stroke="#111" stroke-width="6"/>
+    <path class="cape" d="M-150 140 L150 140 L230 620 Q0 660 -230 620 Z" fill="#f4f4f8" ${OL}/>
+    <rect x="-34" y="80" width="68" height="70" fill="${SKIN}" ${OL}/>
+    <path d="M-80 -30 C-82 40 -60 90 0 100 C60 90 82 40 80 -30 C78 -96 40 -118 0 -118 C-40 -118 -78 -96 -80 -30 Z" fill="${HAIR}" ${OL}/>
+    ${vegHair(false)}
+    <path d="M-110 150 Q-180 120 -196 160 L-150 214 Q-130 180 -110 196 Z M110 150 Q180 120 196 160 L150 214 Q130 180 110 196 Z" fill="${GOLD}" ${OL}/>
   </g>`;
 }
 
@@ -389,7 +418,7 @@ const SCENES = [
        <circle class="burst" cx="540" cy="1050" r="300" fill="none" stroke="#ffe14d" stroke-width="40"/>
        <circle class="burst" style="animation-delay:.4s" cx="540" cy="1050" r="300" fill="none" stroke="#7fd0ff" stroke-width="30"/>
        <circle class="burst" style="animation-delay:.8s" cx="540" cy="1050" r="300" fill="rgba(255,255,255,.25)"/>
-       ${vegeta({y:1020,s:1.35,expr:'smug'})}
+       ${vegeta({y:1000,s:1.3,expr:'smug',ssj:true})}
      </g>` },
 
  { who:'goku', line:'Si, un peu quand même.', sfx:'laugh',
@@ -424,7 +453,7 @@ const SCENES = [
  { who:'goku', line:"C'est pareil.", sfx:'blip',
    art:()=>`<rect width="1080" height="1920" fill="#9fd8ff"/>
      <g class="blink">${goku({y:960,s:1.6,expr:'normal'})}
-       <g class="lids" transform="translate(540 960) scale(1.6)"><rect x="-56" y="-30" width="44" height="50" fill="${SKIN}"/><rect x="12" y="-30" width="44" height="50" fill="${SKIN}"/><path d="M-52 -4 H-16 M16 -4 H52" stroke="#111" stroke-width="8"/></g></g>
+       <g class="lids" transform="translate(540 960) scale(1.6)"><path d="M-68 -24 L-12 -16 L-14 14 L-66 14 Z M68 -24 L12 -16 L14 14 L66 14 Z" fill="${SKIN}"/><path d="M-62 0 Q-40 8 -18 0 M18 0 Q40 8 62 0" stroke="#111" stroke-width="8" fill="none" stroke-linecap="round"/></g></g>
      <g class="dots"><circle cx="420" cy="420" r="30" fill="#111"/><circle cx="540" cy="420" r="30" fill="#111"/><circle cx="660" cy="420" r="30" fill="#111"/></g>` },
 
  { title:'POURQUOI MOI JE M’EN FOUS', who:'vegeta', line:'Et toi, pourquoi ça te fait rien de perdre ?',
@@ -455,7 +484,7 @@ const SCENES = [
      <g class="slideR">
        <text class="fb pop d4" x="810" y="660" text-anchor="middle" font-family="Bangers" font-size="150" fill="#fff" stroke="#111" stroke-width="7">+1</text>
        <text class="fb pop d5" x="810" y="800" text-anchor="middle" font-family="Bangers" font-size="120" fill="#fff" stroke="#111" stroke-width="6">NIVEAU</text>
-       <g transform="translate(810 1150) scale(.8)"><g class="bob">${goku({x:0,y:0,s:1,expr:'happy'})}</g></g>
+       <g transform="translate(810 1150) scale(.8)"><g class="bob">${goku({x:0,y:0,s:1,expr:'happy',ssj:true})}</g></g>
        ${sparkles(10,580,1040,300,1600)}
      </g>
      <path d="M540 0 V1920" stroke="#111" stroke-width="16"/>
@@ -597,6 +626,21 @@ addEventListener('resize',fit); fit();
 /* ?scene=N pour ouvrir directement une scène (sans son) */
 const q = new URLSearchParams(location.search).get('scene');
 if(q){ document.getElementById('start').remove(); const n=+q-1; document.getElementById('s'+n)?.classList.add('active'); cur=n; setSub(SCENES[n]); revealAll(); }
+
+/* ?render : API pilotée image par image par tools/render.mjs (export MP4) */
+if(new URLSearchParams(location.search).has('render')){
+  document.getElementById('start')?.remove(); document.getElementById('bar').style.display='none';
+  window.__render = {
+    scene(i){ document.querySelectorAll('.scene').forEach(s=>s.classList.remove('active'));
+      const el=document.getElementById('s'+i); void el.offsetWidth; el.classList.add('active');
+      setSub(SCENES[i]); prog.style.width=((i+1)/SCENES.length*100)+'%'; },
+    seek(ms, wordFrac){
+      document.getAnimations().forEach(a=>{ a.pause(); a.currentTime=ms; });
+      const n=Math.ceil(wordSpans.length*Math.max(0,Math.min(1,wordFrac)));
+      wordSpans.forEach((w,k)=>w.classList.toggle('on', k<n));
+    },
+  };
+}
 </script>
 </body>
 </html>
